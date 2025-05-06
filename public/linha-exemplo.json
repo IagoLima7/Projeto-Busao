@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "nome": "Linha 101",
+    "horario": "06:00 - 22:00",
+    "sentido": "Bairro - Centro"
+  },
+  {
+    "id": 2,
+    "nome": "Linha 202",
+    "horario": "05:30 - 23:00",
+    "sentido": "Centro - Bairro"
+  }
+]
