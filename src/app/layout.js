@@ -1,25 +1,21 @@
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import './globals.css'
 
 export const metadata = {
-  title: "Vai de Busão",
-  description: "Sua plataforma de transporte público",
-};
+  title: 'Vai de Busão - Transporte Público do Maranhão',
+  description: 'Informações sobre transporte público no Maranhão',
+}
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="pt-br">
-      <body className="bg-gray-100 text-gray-900">{children}</body>
+    <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </head>
+      <body className="min-h-screen bg-[#FAFAFA] text-[#333333] font-sans" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
-  );
+  )
 }
