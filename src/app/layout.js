@@ -1,8 +1,12 @@
+import { Inter } from 'next/font/google';
 import './globals.css'
+import { AuthProvider } from '../contexts/AuthContext';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'Vai de Busão - Transporte Público do Maranhão',
-  description: 'Informações sobre transporte público no Maranhão',
+  title: 'Sistema de Ônibus',
+  description: 'Sistema de gerenciamento de linhas de ônibus',
 }
 
 export default function RootLayout({ children }) {
@@ -13,8 +17,8 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className="min-h-screen bg-[#FAFAFA] text-[#333333] font-sans" suppressHydrationWarning>
-        {children}
+      <body className={inter.className} suppressHydrationWarning>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   )

@@ -6,6 +6,7 @@ import LinhaCard from "./_componentes/LinhaCard";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { linhaService } from "../services/api";
 
 export default function Home() {
   const [linhas, setLinhas] = useState([]);
@@ -13,23 +14,26 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/linha-exemplo.json")
-      .then((res) => res.json())
-      .then((data) => {
+    const carregarLinhas = async () => {
+      try {
+        setIsLoading(true);
+        const data = await linhaService.listar();
         setLinhas(data);
-        setIsLoading(false);
-      })
-      .catch(error => {
+      } catch (error) {
         console.error("Erro ao carregar linhas:", error);
+      } finally {
         setIsLoading(false);
-      });
+      }
+    };
+
+    carregarLinhas();
   }, []);
 
   const linhasFiltradas = linhas.filter(
     (linha) =>
       linha.numero?.toLowerCase().includes(busca.toLowerCase()) ||
       linha.nome?.toLowerCase().includes(busca.toLowerCase()) ||
-      linha.destino?.toLowerCase().includes(busca.toLowerCase())
+      linha.sentido?.toLowerCase().includes(busca.toLowerCase())
   );
 
   return (
@@ -148,7 +152,7 @@ export default function Home() {
           </div>
         </section>
 
-        
+
       </main>
 
       <Footer />

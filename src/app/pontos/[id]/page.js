@@ -1,209 +1,174 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import Header from "../../_componentes/Header";
-import Footer from "../../_componentes/Footer";
-import { useParams } from "next/navigation";
+import { useState, useEffect } from 'react';
+import Header from '../../_componentes/Header';
+import Footer from '../../_componentes/Footer';
+import { pontoService } from '../../../services/api';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
 
-export default function PontoDetalhes() {
-    const params = useParams();
+export default function DetalhesPonto() {
+    const { id } = useParams();
     const [ponto, setPonto] = useState(null);
-    const [linhasRelacionadas, setLinhasRelacionadas] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Carregar dados do ponto
-        fetch("/pontos-exemplo.json")
-            .then((res) => res.json())
-            .then((data) => {
-                const pontoEncontrado = data.find(p => p.id === parseInt(params.id));
-                setPonto(pontoEncontrado);
+        const fetchPonto = async () => {
+            try {
+                setLoading(true);
+                const data = await pontoService.obter(id);
+                setPonto(data);
+            } catch (err) {
+                console.error('Erro ao carregar detalhes do ponto:', err);
+                setError('Não foi possível carregar os detalhes deste ponto.');
+            } finally {
+                setLoading(false);
+            }
+        };
 
-                // Após encontrar o ponto, carregar as linhas relacionadas
-                if (pontoEncontrado) {
-                    fetch("/linha-exemplo.json")
-                        .then((res) => res.json())
-                        .then((linhasData) => {
-                            const linhas = linhasData.filter(l => pontoEncontrado.linhas.includes(parseInt(l.numero)));
-                            setLinhasRelacionadas(linhas);
-                            setIsLoading(false);
-                        })
-                        .catch(error => {
-                            console.error("Erro ao carregar linhas relacionadas:", error);
-                            setIsLoading(false);
-                        });
-                } else {
-                    setIsLoading(false);
-                }
-            })
-            .catch(error => {
-                console.error("Erro ao carregar detalhes do ponto:", error);
-                setIsLoading(false);
-            });
-    }, [params.id]);
+        if (id) {
+            fetchPonto();
+        }
+    }, [id]);
 
-    // Função para renderizar os detalhes da estrutura do ponto
-    const renderEstruturaDetalhes = () => {
-        if (!ponto) return null;
-
-        const estruturaItens = [
-            { label: "Cobertura", value: ponto.estrutura.cobertura },
-            { label: "Assento", value: ponto.estrutura.assento },
-            { label: "Acessibilidade", value: ponto.estrutura.acessibilidade },
-            { label: "Iluminação", value: ponto.estrutura.iluminacao },
-            { label: "Painel Informativo", value: ponto.estrutura.painel }
-        ];
-
+    if (loading) {
         return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                {estruturaItens.map((item, index) => (
-                    <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <span className="font-medium text-[#333333]">{item.label}</span>
-                            {item.value ? (
-                                <span className="text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs font-medium">
-                                    Disponível
-                                </span>
-                            ) : (
-                                <span className="text-red-600 bg-red-100 px-2 py-1 rounded-full text-xs font-medium">
-                                    Indisponível
-                                </span>
-                            )}
-                        </div>
+            <div className="min-h-screen flex flex-col">
+                <Header />
+                <main className="flex-grow container-custom py-8">
+                    <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
                     </div>
-                ))}
+                </main>
+                <Footer />
             </div>
         );
-    };
+    }
+
+    if (error || !ponto) {
+        return (
+            <div className="min-h-screen flex flex-col">
+                <Header />
+                <main className="flex-grow container-custom py-8">
+                    <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+                        <p className="text-red-700">{error || 'Ponto não encontrado'}</p>
+                        <Link href="/pontos" className="text-red-700 font-medium hover:underline mt-2 inline-block">
+                            ← Voltar para pontos
+                        </Link>
+                    </div>
+                </main>
+                <Footer />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex flex-col">
             <Header />
 
             <main className="flex-grow container-custom py-8">
-                <div className="mb-4">
-                    <Link href="/pontos" className="text-primary hover:underline flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        Voltar para pontos
-                    </Link>
+                {/* Breadcrumb */}
+                <div className="flex items-center text-sm text-gray-600 mb-6">
+                    <Link href="/" className="hover:text-primary">Início</Link>
+                    <span className="mx-2">›</span>
+                    <Link href="/pontos" className="hover:text-primary">Pontos</Link>
+                    <span className="mx-2">›</span>
+                    <span className="text-primary">{ponto.nome}</span>
                 </div>
 
-                {isLoading ? (
-                    <div className="text-center py-16">
-                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                        <p className="mt-4 text-[#666666]">Carregando detalhes do ponto...</p>
+                {/* Cabeçalho do ponto */}
+                <div className="bg-primary-lightest rounded-lg p-6 mb-8 border-l-4 border-primary">
+                    <div className="flex flex-wrap justify-between items-center">
+                        <div>
+                            <h1 className="text-2xl font-bold text-primary-dark mb-2">{ponto.nome}</h1>
+                            <p className="text-gray-600">{ponto.endereco}</p>
+                        </div>
+
+                        <div className="mt-4 md:mt-0">
+                            <span className="text-sm text-gray-500">
+                                Atualizado em {ponto.updatedAt ? new Date(ponto.updatedAt).toLocaleDateString() : 'hoje'}
+                            </span>
+                        </div>
                     </div>
-                ) : ponto ? (
-                    <div>
-                        <div className="bg-white rounded-xl overflow-hidden shadow-md mb-8">
-                            <div className="p-6">
-                                <h1 className="text-3xl font-bold text-primary-dark mb-4">{ponto.nome}</h1>
+                </div>
 
-                                <div className="flex flex-col md:flex-row mb-6">
-                                    <div className="flex items-start mb-4 md:mb-0 md:mr-8">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#666666] mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        <div>
-                                            <span className="font-medium">Endereço</span>
-                                            <p className="text-[#666666]">{ponto.endereco}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#666666] mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                        </svg>
-                                        <div>
-                                            <span className="font-medium">Coordenadas</span>
-                                            <p className="text-[#666666]">
-                                                {ponto.coordenadas.latitude}, {ponto.coordenadas.longitude}
-                                            </p>
-                                        </div>
-                                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                    {/* Informações do Ponto */}
+                    <div className="col-span-1 card">
+                        <div className="bg-primary-dark text-white px-4 py-3 rounded-t-lg">
+                            <h2 className="text-lg font-semibold">Detalhes do Ponto</h2>
+                        </div>
+                        <div className="p-4">
+                            <div className="space-y-4">
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Endereço Completo</h3>
+                                    <p className="mt-1">{ponto.endereco}</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Coordenadas</h3>
+                                    <p className="mt-1">{ponto.latitude}, {ponto.longitude}</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Referência</h3>
+                                    <p className="mt-1">Próximo ao {ponto.endereco.split(',')[0]}</p>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Seção de estrutura */}
-                        <h2 className="text-2xl font-bold text-[#333333] mb-4">Estrutura do Ponto</h2>
-                        <div className="bg-gray-50 p-6 rounded-xl mb-8">
-                            {renderEstruturaDetalhes()}
+                    {/* Linhas que passam neste ponto */}
+                    <div className="col-span-1 md:col-span-2 card">
+                        <div className="bg-primary-dark text-white px-4 py-3 rounded-t-lg">
+                            <h2 className="text-lg font-semibold">Linhas que passam por este ponto ({ponto.linhas?.length || 0})</h2>
                         </div>
-
-                        {/* Seção de mapa */}
-                        <h2 className="text-2xl font-bold text-[#333333] mb-4">Localização</h2>
-                        <div className="bg-white rounded-xl overflow-hidden shadow-md p-6 mb-8">
-                            <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center mb-4">
-                                <p className="text-gray-500">Mapa de localização estará disponível em breve.</p>
-                            </div>
-                            <p className="text-[#666666] text-sm">
-                                As coordenadas exatas deste ponto de ônibus são: {ponto.coordenadas.latitude}, {ponto.coordenadas.longitude}.
-                                Em breve disponibilizaremos um mapa interativo para facilitar sua localização.
-                            </p>
-                        </div>
-
-                        {/* Seção de linhas que passam pelo ponto */}
-                        <h2 className="text-2xl font-bold text-[#333333] mb-4">Linhas que passam por este ponto</h2>
-                        {linhasRelacionadas.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                                {linhasRelacionadas.map(linha => (
-                                    <Link key={linha.id} href={`/linhas/${linha.id}`}>
-                                        <div className={`rounded-lg overflow-hidden border-l-4 border-${linha.cor}-600 bg-white shadow-md p-4 hover:shadow-lg transition-shadow`}>
-                                            <div className="flex justify-between items-center">
-                                                <div>
-                                                    <span className={`inline-block font-bold text-sm px-2 py-0.5 rounded-full bg-${linha.cor}-600 text-white mb-1`}>
-                                                        {linha.numero}
-                                                    </span>
-                                                    <h3 className="font-semibold text-[#333333]">{linha.nome}</h3>
+                        <div className="p-4">
+                            {ponto.linhas && ponto.linhas.length > 0 ? (
+                                <div className="space-y-3">
+                                    {ponto.linhas.map((linha) => (
+                                        <div key={linha.id} className="flex items-start p-3 border border-gray-100 rounded-lg hover:bg-gray-50">
+                                            <div className="bg-primary-lightest text-primary px-2 py-1 rounded font-bold mr-3">
+                                                {linha.numero}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-medium">{linha.nome}</h3>
+                                                <p className="text-sm text-gray-600">Sentido: {linha.sentido}</p>
+                                                <div className="mt-1 text-xs text-primary hover:underline">
+                                                    <Link href={`/linhas/${linha.id}`}>Ver detalhes da linha</Link>
                                                 </div>
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                </svg>
                                             </div>
                                         </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="bg-white rounded-xl p-6 text-center mb-8">
-                                <p className="text-[#666666]">
-                                    Não foi possível encontrar as linhas que passam por este ponto.
-                                </p>
-                            </div>
-                        )}
-
-                        {/* CTA para feedback */}
-                        <div className="bg-primary/10 rounded-xl p-6">
-                            <h3 className="text-xl font-bold text-primary-dark mb-2">Encontrou um problema neste ponto?</h3>
-                            <p className="text-[#666666] mb-4">
-                                Ajude a melhorar o transporte público informando sobre problemas neste ponto de ônibus.
-                            </p>
-                            <Link
-                                href="#"
-                                className="inline-block bg-primary hover:bg-primary-dark text-white font-medium px-6 py-3 rounded-lg transition-colors"
-                            >
-                                Reportar Problema
-                            </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 py-4 text-center">Não há linhas cadastradas para este ponto.</p>
+                            )}
                         </div>
                     </div>
-                ) : (
-                    <div className="text-center py-10 bg-gray-50 rounded-lg border border-gray-200">
-                        <p className="text-gray-500 mb-2">
-                            Ponto não encontrado.
+                </div>
+
+                {/* Mapa (Placeholder) */}
+                <div className="card p-4 mb-8">
+                    <h2 className="text-xl font-bold mb-4">Localização no Mapa</h2>
+                    <div className="bg-gray-100 h-96 rounded-lg flex items-center justify-center">
+                        <p className="text-gray-500">
+                            Mapa do ponto estará disponível em breve...
                         </p>
-                        <Link
-                            href="/pontos"
-                            className="border border-primary text-primary font-medium px-4 py-2 rounded-lg hover:bg-primary/5 transition-colors"
-                        >
-                            Voltar para lista de pontos
-                        </Link>
                     </div>
-                )}
+                </div>
+
+                {/* Voltar para lista de pontos */}
+                <div className="mt-6">
+                    <Link
+                        href="/pontos"
+                        className="text-primary hover:text-primary-dark font-medium flex items-center"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Voltar para lista de pontos
+                    </Link>
+                </div>
             </main>
 
             <Footer />

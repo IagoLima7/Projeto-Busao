@@ -1,62 +1,68 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Header from "../_componentes/Header";
-import Footer from "../_componentes/Footer";
-import LinhaCard from "../_componentes/LinhaCard";
-import Link from "next/link";
+import { useState, useEffect } from 'react';
+import Header from '../_componentes/Header';
+import Footer from '../_componentes/Footer';
+import LinhaCard from '../_componentes/LinhaCard';
+import { linhaService } from '../../services/api';
+import Link from 'next/link';
 
 export default function LinhasPage() {
   const [linhas, setLinhas] = useState([]);
-  const [busca, setBusca] = useState("");
-  const [filtroSentido, setFiltroSentido] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [busca, setBusca] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("/linha-exemplo.json")
-      .then((res) => res.json())
-      .then((data) => {
+    const carregarLinhas = async () => {
+      try {
+        setLoading(true);
+        const data = await linhaService.listar();
         setLinhas(data);
-        setIsLoading(false);
-      })
-      .catch(error => {
-        console.error("Erro ao carregar linhas:", error);
-        setIsLoading(false);
-      });
+      } catch (err) {
+        console.error('Erro ao carregar linhas:', err);
+        setError('Erro ao carregar as linhas. Por favor, tente novamente.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    carregarLinhas();
   }, []);
 
   const linhasFiltradas = linhas.filter(
     (linha) =>
-      (linha.numero?.toLowerCase().includes(busca.toLowerCase()) ||
-        linha.nome?.toLowerCase().includes(busca.toLowerCase()) ||
-        linha.destino?.toLowerCase().includes(busca.toLowerCase())) &&
-      (filtroSentido === "" || linha.sentido === filtroSentido)
+      linha.numero?.toLowerCase().includes(busca.toLowerCase()) ||
+      linha.nome?.toLowerCase().includes(busca.toLowerCase()) ||
+      linha.sentido?.toLowerCase().includes(busca.toLowerCase())
   );
-
-  const sentidos = [...new Set(linhas.map(linha => linha.sentido))];
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
       <main className="flex-grow container-custom py-8">
-        {/* Header da página */}
+        {/* Breadcrumb */}
+        <div className="flex items-center text-sm text-gray-600 mb-6">
+          <Link href="/" className="hover:text-primary">Início</Link>
+          <span className="mx-2">›</span>
+          <span className="text-primary">Linhas</span>
+        </div>
+
+        {/* Cabeçalho da página */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-primary-dark mb-2">
-            Linhas de Ônibus em São Luís
-          </h1>
-          <p className="text-[#666666] max-w-3xl">
-            Encontre informações detalhadas sobre todas as linhas de ônibus que operam em São Luís, incluindo horários,
-            trajetos e pontos de parada. Utilize os filtros abaixo para encontrar a linha que você precisa.
+          <h1 className="text-3xl font-bold text-primary-dark mb-2">Linhas de Ônibus</h1>
+          <p className="text-gray-600">
+            Encontre informações sobre todas as linhas de ônibus disponíveis, incluindo horários, pontos de parada e rotas.
           </p>
         </div>
 
-        {/* Filtros */}
-        <div className="bg-white p-6 rounded-xl shadow-md mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <label htmlFor="busca" className="block text-sm font-medium text-[#666666] mb-1">
-                Buscar por número, nome ou destino
+        {/* Barra de pesquisa */}
+        <div className="bg-white shadow-md rounded-lg p-6 mb-8">
+          <div className="flex flex-col md:flex-row md:items-center">
+            <div className="flex-grow">
+              <label htmlFor="busca" className="block text-sm font-medium text-gray-700 mb-2">
+                Pesquisar por linha, nome ou destino
               </label>
               <div className="relative">
                 <input
@@ -64,91 +70,68 @@ export default function LinhasPage() {
                   id="busca"
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
-                  placeholder="Ex: 101, Centro, Cohab..."
-                  className="w-full p-3 pl-10 rounded-lg border border-[#E0E0E0] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="Ex: 123, Centro, Terminal..."
+                  className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                 />
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
               </div>
             </div>
-
-            <div className="md:w-64">
-              <label htmlFor="sentido" className="block text-sm font-medium text-[#666666] mb-1">
-                Filtrar por sentido
-              </label>
-              <select
-                id="sentido"
-                value={filtroSentido}
-                onChange={(e) => setFiltroSentido(e.target.value)}
-                className="w-full p-3 rounded-lg border border-[#E0E0E0] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              >
-                <option value="">Todos os sentidos</option>
-                {sentidos.map(sentido => (
-                  <option key={sentido} value={sentido}>{sentido}</option>
-                ))}
-              </select>
+            <div className="mt-4 md:mt-0 md:ml-4 flex items-center">
+              {busca && (
+                <button
+                  onClick={() => setBusca('')}
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-primary"
+                >
+                  Limpar
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         {/* Resultados */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-primary-dark">Linhas Disponíveis</h2>
-            {(busca || filtroSentido) && (
-              <span className="text-sm text-[#666666]">
-                {linhasFiltradas.length} resultados encontrados
-              </span>
-            )}
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+            <p className="text-red-700">{error}</p>
           </div>
+        )}
 
-          {isLoading ? (
-            <div className="text-center py-16">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-              <p className="mt-4 text-[#666666]">Carregando linhas...</p>
-            </div>
-          ) : linhasFiltradas.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            <p className="mt-4 text-gray-600">Carregando linhas...</p>
+          </div>
+        ) : linhasFiltradas.length > 0 ? (
+          <>
+            <p className="text-gray-600 mb-6">
+              {busca
+                ? `Exibindo ${linhasFiltradas.length} ${linhasFiltradas.length === 1 ? 'resultado' : 'resultados'} para "${busca}"`
+                : `Mostrando todas as ${linhasFiltradas.length} linhas disponíveis`}
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {linhasFiltradas.map((linha) => (
                 <LinhaCard key={linha.id} linha={linha} />
               ))}
             </div>
-          ) : (
-            <div className="text-center py-10 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-gray-500 mb-2">
-                Nenhuma linha encontrada com esses termos.
-              </p>
-              <button
-                onClick={() => {
-                  setBusca("");
-                  setFiltroSentido("");
-                }}
-                className="border border-primary text-primary font-medium px-4 py-2 rounded-lg hover:bg-primary/5 transition-colors"
-              >
-                Limpar filtros
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* CTA Banner */}
-        <div className="bg-primary/10 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between">
-          <div className="mb-4 md:mb-0">
-            <h3 className="text-xl font-bold text-primary-dark mb-2">Não encontrou o que procurava?</h3>
-            <p className="text-[#666666]">
-              Entre em contato com o MOB Maranhão para mais informações sobre as linhas de ônibus.
+          </>
+        ) : (
+          <div className="text-center py-10 bg-gray-50 rounded-lg border border-gray-200">
+            <p className="text-gray-500 mb-2">
+              Nenhuma linha encontrada com esses termos.
             </p>
+            <button
+              onClick={() => setBusca('')}
+              className="border border-primary text-primary font-medium px-4 py-2 rounded-lg hover:bg-primary/5 transition-colors"
+            >
+              Limpar busca
+            </button>
           </div>
-          <Link
-            href="https://mob.ma.gov.br/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-primary hover:bg-primary-dark text-white font-medium px-6 py-3 rounded-lg transition-colors"
-          >
-            Visitar MOB Maranhão
-          </Link>
-        </div>
+        )}
       </main>
 
       <Footer />
