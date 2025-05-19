@@ -73,7 +73,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-primary-dark">Linhas Disponíveis</h2>
             {busca && (
               <span className="text-sm text-[#666666]">
-                Mostrando resultados para "{busca}"
+                Mostrando resultados para &quot;{busca}&quot;
               </span>
             )}
           </div>
