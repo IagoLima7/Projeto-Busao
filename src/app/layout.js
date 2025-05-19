@@ -1,13 +1,14 @@
-import { Inter } from 'next/font/google';
-import './globals.css'
-import { AuthProvider } from '../contexts/AuthContext';
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { AuthProvider } from "../contexts/AuthContext";
+import "leaflet/dist/leaflet.css";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: 'Sistema de Ônibus',
-  description: 'Sistema de gerenciamento de linhas de ônibus',
-}
+  title: "Sistema de Ônibus",
+  description: "Sistema de gerenciamento de linhas de ônibus",
+};
 
 export default function RootLayout({ children }) {
   return (
@@ -21,5 +22,5 @@ export default function RootLayout({ children }) {
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
-  )
+  );
 }
